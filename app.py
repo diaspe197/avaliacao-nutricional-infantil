@@ -106,15 +106,15 @@ if os.path.exists("avaliacoes.csv"):
     df_historico.to_excel(buffer_todas, index=False, engine="openpyxl")
     buffer_todas.seek(0)
 
-    st.markdown("### 📂 Exportar histórico completo")
+    st.markdown("### Exportar histórico completo")
     st.download_button(
-        label="📥 Baixar todas as avaliações",
+        label="Baixar todas as avaliações",
         data=buffer_todas,
         file_name="avaliacoes_historico.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
 else:
-    st.info("📭 Nenhuma avaliação foi salva ainda.")
+    st.info("Nenhuma avaliação foi salva ainda.")
 
 # 🔎 Visualizar e filtrar histórico salvo
 with st.expander("🔍 Visualizar avaliações anteriores"):

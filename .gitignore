@@ -32,5 +32,3 @@ venv.bak/
 # Arquivos do sistema
 .DS_Store
 Thumbs.db
-
-avaliacoes.csv

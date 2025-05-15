@@ -65,10 +65,8 @@ if enviar:
         "observações": ""
     }])
 
-    # Salva temporariamente na sessão
     st.session_state["resultado_atual"] = df_resultado
 
-    # Exibe o resultado
     st.subheader("Resultado da Avaliação")
     st.write(f"**Idade em meses:** {idade_meses}")
     st.write(f"**IMC:** {imc:.2f} → {imc_class}")
@@ -77,7 +75,7 @@ if enviar:
     st.write(f"**Z-altura/idade:** {z_altura:.2f} → {z_altura_class}")
     st.write(f"**Classificação nutricional:** {classificacao}")
 
-# Botão de salvar fora do if enviar, usa session_state
+# Salvar avaliação
 if "resultado_atual" in st.session_state:
     if st.button("Salvar avaliação"):
         df_resultado = st.session_state["resultado_atual"]
@@ -91,17 +89,16 @@ if "resultado_atual" in st.session_state:
         df_final.to_csv(csv_path, index=False)
         st.success("✅ Avaliação salva com sucesso!")
 
-        # Botão Nova Avaliação após salvar
         if st.button("Nova Avaliação"):
             for chave in ["resultado_atual"]:
                 if chave in st.session_state:
                     del st.session_state[chave]
-            st.experimental_rerun()
+            st.rerun()
 
-#Exportar avaliações
+# Exportar histórico
 if os.path.exists("avaliacoes.csv"):
     df_historico = pd.read_csv("avaliacoes.csv")
-
+    
     buffer_todas = BytesIO()
     df_historico.to_excel(buffer_todas, index=False, engine="openpyxl")
     buffer_todas.seek(0)
@@ -113,18 +110,29 @@ if os.path.exists("avaliacoes.csv"):
         file_name="avaliacoes_historico.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
-else:
-    st.info("Nenhuma avaliação foi salva ainda.")
 
-# 🔎 Visualizar e filtrar histórico salvo
-with st.expander("🔍 Visualizar avaliações anteriores"):
-    filtro_nome = st.text_input("Filtrar por nome")
-
+# Tabela interativa para visualizar e excluir
+if os.path.exists("avaliacoes.csv"):
     df_historico = pd.read_csv("avaliacoes.csv")
+    df_historico["Excluir"] = False
 
-    if filtro_nome:
-        df_filtrado = df_historico[df_historico["nome"].str.contains(filtro_nome, case=False, na=False)]
-    else:
-        df_filtrado = df_historico
+    with st.expander("🔍 Visualizar avaliações anteriores", expanded=False):
 
-    st.dataframe(df_filtrado, use_container_width=True)
+        edited_df = st.data_editor(
+            df_historico,
+            use_container_width=True,
+            key="tabela_edicao",
+            disabled=[
+                "nome", "sexo", "data de nascimento", "data da avaliação", "idade(meses)", 
+                "peso(kg)", "altura(cm)", "IMC", "IMC - classificação", "Z-IMC/idade",
+                "Z-IMC/idade - interpretação", "Z-peso/idade", "Z-peso/idade - interpretação",
+                "Z-altura/idade", "Z-altura/idade - interpretação", "classificação nutricional", 
+                "observações"
+            ]
+        )
+
+        if st.button("Excluir avaliações selecionadas"):
+            df_restante = edited_df[edited_df["Excluir"] != True].drop(columns=["Excluir"])
+            df_restante.to_csv("avaliacoes.csv", index=False)
+            st.success("✅ Avaliações excluídas com sucesso.")
+            st.rerun()

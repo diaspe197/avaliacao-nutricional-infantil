@@ -42,3 +42,51 @@ def classificar_imc(z):
         return "Sobrepeso"
     else:
         return "Obesidade"
+    
+def interpretar_imc(imc):
+    if imc < 14:
+        return "Abaixo do adequado"
+    elif 14 <= imc < 17:
+        return "Adequado"
+    elif 17 <= imc < 19:
+        return "Sobrepeso"
+    else:  # imc >= 19
+        return "Obesidade"
+
+def interpretar_z_imc(z):
+    if z < -3:
+        return "Magreza grave"
+    elif -3 <= z < -2:
+        return "Magreza moderada"
+    elif -2 <= z < -1:
+        return "Magreza leve ou risco de magreza"
+    elif -1 <= z <= 1:
+        return "Eutrofia (peso adequado)"
+    elif 1 < z <= 2:
+        return "Sobrepeso"
+    elif 2 < z <= 3:
+        return "Obesidade"
+    else:  # z > 3
+        return "Obesidade grave"
+
+def interpretar_z_peso(z):
+    if isinstance(z, str):
+        return z  # caso seja mensagem como "não disponível"
+    if z < -3:
+        return "Peso muito baixo"
+    elif -3 <= z < -2:
+        return "Baixo peso"
+    elif -2 <= z <= 2:
+        return "Peso adequado"
+    else:  # z > 2
+        return "Peso elevado"
+
+def interpretar_z_altura(z):
+    if z < -3:
+        return "Baixa estatura acentuada"
+    elif -3 <= z < -2:
+        return "Baixa estatura"
+    elif -2 <= z <= 2:
+        return "Estatura adequada"
+    else:  # z > 2
+        return "Estatura elevada"

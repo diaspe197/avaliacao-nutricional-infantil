@@ -2,29 +2,34 @@ import streamlit as st
 from datetime import datetime, date
 import pandas as pd
 from io import BytesIO
+import os
 from scripts.calculos import (
     calcular_idade_meses,
     calcular_imc,
     calcular_zscore_manual,
     classificar_imc,
     calcular_zpeso_idade,
-    calcular_zaltura_idade
+    calcular_zaltura_idade,
+    interpretar_z_imc,
+    interpretar_z_peso,
+    interpretar_z_altura,
+    interpretar_imc
 )
 
 # Estilo visual
-with open("assets/style.css") as f:
+with open("assets/style.css", encoding="utf-8") as f:
     st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
-# Título estilizado
+# Título
 st.markdown("<h1 style='text-align: center; color: #0072b1;'>Avaliação Nutricional Infantil</h1>", unsafe_allow_html=True)
 
 with st.form("form_avaliacao"):
-    nome = st.text_input("Nome")
-    sexo = st.selectbox("Sexo", ["Masculino", "Feminino"])
-    data_nascimento = st.date_input("Data de nascimento", min_value=date(2013, 1, 1))
-    data_avaliacao = st.date_input("Data da avaliação", value=datetime.today())
-    peso = st.number_input("Peso (kg)", min_value=0.0, format="%.2f")
-    altura = st.number_input("Altura (cm)", min_value=0.0, format="%.2f")
+    nome = st.text_input("Nome", key="input_nome")
+    sexo = st.selectbox("Sexo", ["Masculino", "Feminino"], key="input_sexo")
+    data_nascimento = st.date_input("Data de nascimento", min_value=date(2013, 1, 1), key="input_nascimento")
+    data_avaliacao = st.date_input("Data da avaliação", value=datetime.today(), key="input_avaliacao")
+    peso = st.number_input("Peso (kg)", min_value=0.0, format="%.2f", key="input_peso")
+    altura = st.number_input("Altura (cm)", min_value=0.0, format="%.2f", key="input_altura")
     enviar = st.form_submit_button("Calcular")
 
 if enviar:
@@ -35,13 +40,10 @@ if enviar:
     z_altura = calcular_zaltura_idade(sexo, idade_meses, altura)
     classificacao = classificar_imc(z_imc)
 
-    st.subheader("Resultado da Avaliação")
-    st.write(f"**Idade em meses:** {idade_meses}")
-    st.write(f"**IMC:** {imc}")
-    st.write(f"**Z-IMC/idade:** {z_imc:.2f}")
-    st.write(f"**Z-peso/idade:** {z_peso if isinstance(z_peso, str) else f'{z_peso:.2f}'}")
-    st.write(f"**Z-altura/idade:** {z_altura:.2f}")
-    st.write(f"**Classificação nutricional:** {classificacao}")
+    imc_class = interpretar_imc(imc)
+    z_imc_class = interpretar_z_imc(z_imc)
+    z_peso_class = interpretar_z_peso(z_peso)
+    z_altura_class = interpretar_z_altura(z_altura)
 
     df_resultado = pd.DataFrame([{
         "nome": nome,
@@ -52,20 +54,75 @@ if enviar:
         "peso(kg)": peso,
         "altura(cm)": altura,
         "IMC": imc,
+        "IMC - classificação": imc_class,
         "Z-IMC/idade": round(z_imc, 2),
+        "Z-IMC/idade - interpretação": z_imc_class,
         "Z-peso/idade": z_peso if isinstance(z_peso, str) else round(z_peso, 2),
+        "Z-peso/idade - interpretação": z_peso_class,
         "Z-altura/idade": round(z_altura, 2),
+        "Z-altura/idade - interpretação": z_altura_class,
         "classificação nutricional": classificacao,
         "observações": ""
     }])
 
-    buffer = BytesIO()
-    df_resultado.to_excel(buffer, index=False, engine='openpyxl')
-    buffer.seek(0)
+    # Salva temporariamente na sessão
+    st.session_state["resultado_atual"] = df_resultado
+
+    # Exibe o resultado
+    st.subheader("Resultado da Avaliação")
+    st.write(f"**Idade em meses:** {idade_meses}")
+    st.write(f"**IMC:** {imc:.2f} → {imc_class}")
+    st.write(f"**Z-IMC/idade:** {z_imc:.2f} → {z_imc_class}")
+    st.write(f"**Z-peso/idade:** {z_peso if isinstance(z_peso, str) else f'{z_peso:.2f}'} → {z_peso_class}")
+    st.write(f"**Z-altura/idade:** {z_altura:.2f} → {z_altura_class}")
+    st.write(f"**Classificação nutricional:** {classificacao}")
+
+# Botão de salvar fora do if enviar, usa session_state
+if "resultado_atual" in st.session_state:
+    if st.button("Salvar avaliação"):
+        df_resultado = st.session_state["resultado_atual"]
+        csv_path = "avaliacoes.csv"
+        if os.path.exists(csv_path):
+            df_existente = pd.read_csv(csv_path)
+            df_final = pd.concat([df_existente, df_resultado], ignore_index=True)
+        else:
+            df_final = df_resultado
+
+        df_final.to_csv(csv_path, index=False)
+        st.success("✅ Avaliação salva com sucesso!")
+
+        # Botão Nova Avaliação após salvar
+        if st.button("Nova Avaliação"):
+            for chave in ["resultado_atual"]:
+                if chave in st.session_state:
+                    del st.session_state[chave]
+            st.experimental_rerun()
+
+#Exportar avaliações
+if os.path.exists("avaliacoes.csv"):
+    st.markdown("### Exportar Histórico Completo")
+    df_historico = pd.read_csv("avaliacoes.csv")
+
+    buffer_todas = BytesIO()
+    df_historico.to_excel(buffer_todas, index=False, engine="openpyxl")
+    buffer_todas.seek(0)
 
     st.download_button(
-        label="📥 Baixar resultado",
-        data=buffer,
-        file_name="avaliacao_nutricional.xlsx",
+        label="Baixar todas as avaliações",
+        data=buffer_todas,
+        file_name="avaliacoes_historico.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
+
+# 🔎 Visualizar e filtrar histórico salvo
+with st.expander("🔍 Visualizar avaliações anteriores"):
+    filtro_nome = st.text_input("Filtrar por nome")
+
+    df_historico = pd.read_csv("avaliacoes.csv")
+
+    if filtro_nome:
+        df_filtrado = df_historico[df_historico["nome"].str.contains(filtro_nome, case=False, na=False)]
+    else:
+        df_filtrado = df_historico
+
+    st.dataframe(df_filtrado, use_container_width=True)

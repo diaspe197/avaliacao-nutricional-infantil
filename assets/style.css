@@ -1,50 +1,15 @@
-/* Estilo geral da página */
-body {
-    background-color: #f2f4f8;
-    font-family: 'Segoe UI', sans-serif;
-}
-
-/* Título */
-h1 {
-    color: #0072b1;
-    text-align: center;
-    font-size: 2.4rem;
-    margin-bottom: 2rem;
-}
-
-/* Container de formulário */
-.stForm {
-    background-color: white;
-    padding: 2.5rem;
-    border-radius: 16px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    margin-top: 1.5rem;
-    margin-bottom: 2rem;
-}
-
-/* Botões principais */
-.stButton > button, .stDownloadButton > button {
-    background-color: #0072b1;
+/* Botões azuis simples */
+.stButton > button {
+    background-color: #40980a;
     color: white;
+    font-weight: bold;
     border-radius: 8px;
-    padding: 0.6rem 1.2rem;
-    font-size: 1rem;
-    font-weight: 600;
     border: none;
-    transition: background-color 0.3s ease;
+    padding: 10px 20px;
+    font-size: 15px;
 }
 
-.stButton > button:hover,
-.stDownloadButton > button:hover {
-    background-color: #005a8c;
-}
-
-/* Texto de resultado */
-h2, .stSubheader {
-    color: #333;
-    margin-top: 1.5rem;
-}
-
-.block-container {
-    padding-top: 2rem;
+.stButton > button:hover {
+    background-color: #005f91;
+    cursor: pointer;
 }

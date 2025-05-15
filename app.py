@@ -24,7 +24,7 @@ with open("assets/style.css", encoding="utf-8") as f:
 st.markdown("<h1 style='text-align: center; color: #0072b1;'>Avaliação Nutricional Infantil</h1>", unsafe_allow_html=True)
 
 with st.form("form_avaliacao"):
-    nome = st.text_input("Nome", key="input_nome")
+    nome = st.text_input("Nome Completo", key="input_nome")
     sexo = st.selectbox("Sexo", ["Masculino", "Feminino"], key="input_sexo")
     data_nascimento = st.date_input("Data de nascimento", min_value=date(2013, 1, 1), key="input_nascimento")
     data_avaliacao = st.date_input("Data da avaliação", value=datetime.today(), key="input_avaliacao")
@@ -103,9 +103,9 @@ if os.path.exists("avaliacoes.csv"):
     df_historico.to_excel(buffer_todas, index=False, engine="openpyxl")
     buffer_todas.seek(0)
 
-    st.markdown("### Exportar histórico completo")
+    st.markdown("##### Exportar Histórico Completo")
     st.download_button(
-        label="Baixar todas as avaliações",
+        label="Baixar Avaliações",
         data=buffer_todas,
         file_name="avaliacoes_historico.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
@@ -116,7 +116,7 @@ if os.path.exists("avaliacoes.csv"):
     df_historico = pd.read_csv("avaliacoes.csv")
     df_historico["Excluir"] = False
 
-    with st.expander("🔍 Visualizar avaliações anteriores", expanded=False):
+    with st.expander("🔍 Visualizar Avaliações Anteriores", expanded=False):
 
         edited_df = st.data_editor(
             df_historico,
@@ -131,8 +131,8 @@ if os.path.exists("avaliacoes.csv"):
             ]
         )
 
-        if st.button("Excluir avaliações selecionadas"):
+        if st.button("Excluir Avaliações Selecionadas"):
             df_restante = edited_df[edited_df["Excluir"] != True].drop(columns=["Excluir"])
             df_restante.to_csv("avaliacoes.csv", index=False)
-            st.success("✅ Avaliações excluídas com sucesso.")
+            st.success("✅ Avaliações Excluídas Com Sucesso.")
             st.rerun()
